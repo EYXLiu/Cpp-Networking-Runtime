@@ -3,10 +3,11 @@
 
 #include <handler.hpp>
 #include <buffer_pool.hpp>
+#include <reactor.hpp>
 
 class Connection : public Handler {
 public:
-    Connection(int fd, BufferPool& pool);
+    Connection(int fd, BufferPool& pool, Reactor& reactor);
     ~Connection();
 
     void on_readable() override;
@@ -15,8 +16,13 @@ public:
 private:
     int fd_;
     Buffer read_buf_;
-    int write_buf_size_;
+    Buffer write_buf_;
+    size_t write_size_;
+    size_t write_offset_;
     BufferPool& pool_;
+    Reactor& reactor_;
+
+    void handle_backpressure();
 };
 
 #endif 

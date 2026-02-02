@@ -10,6 +10,7 @@
 struct Buffer { 
     uint8_t* data;
     size_t size;
+    size_t used;
 };
 
 class BufferPool {

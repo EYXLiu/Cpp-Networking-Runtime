@@ -3,7 +3,7 @@
 BufferPool::BufferPool(size_t chunk_size, size_t num_chunks) {
     for (size_t i = 0; i < num_chunks; i++) {
         auto mem = std::make_unique<uint8_t[]>(chunk_size);
-        free_buffers_.push({mem.get(), chunk_size});
+        free_buffers_.push({mem.get(), chunk_size, 0});
         chunks_.push_back(std::move(mem));
     }
 }

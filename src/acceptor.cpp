@@ -37,7 +37,7 @@ void Acceptor::on_readable() {
 
         fcntl(client_fd, F_SETFL, fcntl(client_fd, F_GETFL, 0) | O_NONBLOCK);
 
-        auto conn = std::make_unique<Connection>(client_fd, pool_);
+        auto conn = std::make_unique<Connection>(client_fd, pool_, reactor_);
 
         reactor_.add_fd(client_fd, true, true, conn.get());
 
