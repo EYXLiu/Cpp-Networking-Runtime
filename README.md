@@ -8,6 +8,7 @@ Single-threaded, non-blocking, TCP networking runtime in C++
 - Buffer pool for safer memory control
 - Echo protocol for now
 - Event handling for minimal syscalls
+- Added backpressure handling for overloaded connections
 
 # How to run
 - run `make` to compile the executable  
