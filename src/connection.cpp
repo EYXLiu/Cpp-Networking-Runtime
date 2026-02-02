@@ -36,7 +36,7 @@ void Connection::on_readable() {
     }
     read_buf_.used += n;
 
-    write_buf_.data = read_buf_.data;
+    std::memcpy(write_buf_.data, read_buf_.data, read_buf_.used);
     write_size_ = read_buf_.used;
     write_offset_ = 0;
 
