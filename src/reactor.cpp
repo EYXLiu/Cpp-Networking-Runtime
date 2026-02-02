@@ -26,8 +26,6 @@ void Reactor::remove_fd(int fd) {
     EV_SET(&ev, fd, EVFILT_WRITE, EV_DELETE, 0, 0, nullptr);
     kevent(kq_, &ev, 1, nullptr, 0, nullptr);
 
-    std::cout << "removed" << std::endl;
-
     handlers_.erase(fd);
     close(fd);
 }
