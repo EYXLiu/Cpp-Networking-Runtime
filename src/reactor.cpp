@@ -20,6 +20,12 @@ void Reactor::add_fd(int fd, bool read, bool write, Handler* handler) {
     handlers_[fd] = handler;
 }
 
+void Reactor::remove_fd(int fd) {
+    disable_read(fd);
+    disable_write(fd);
+    handlers_.erase(fd);
+}
+
 void Reactor::enable_read(int fd) {
     struct kevent ev;
     EV_SET(&ev, fd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, nullptr);

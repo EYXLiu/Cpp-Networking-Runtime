@@ -7,6 +7,7 @@ Connection::Connection(int fd, BufferPool& pool, Reactor& reactor) : fd_(fd), wr
         read_buf_ = pool_.acquire();
     } catch (std::runtime_error e) {
         std::cout << "Failed to acquire read buffer" << std::endl;
+        reactor_.remove_fd(fd_);
         close(fd_);
     }
 
@@ -15,6 +16,7 @@ Connection::Connection(int fd, BufferPool& pool, Reactor& reactor) : fd_(fd), wr
     } catch (std::runtime_error e) {
         std::cout << "Failed to acquire write buffer" << std::endl;
         pool.release(read_buf_);
+        reactor_.remove_fd(fd_);
         close(fd_);
     }
 }
@@ -22,6 +24,7 @@ Connection::Connection(int fd, BufferPool& pool, Reactor& reactor) : fd_(fd), wr
 Connection::~Connection() {
     pool_.release(read_buf_);
     pool_.release(write_buf_);
+    reactor_.remove_fd(fd_);
     close(fd_);
 }
 
@@ -31,6 +34,7 @@ void Connection::on_readable() {
         std::cout << "Client closed fd=" << fd_ << std::endl;
         pool_.release(read_buf_);
         pool_.release(write_buf_);
+        reactor_.remove_fd(fd_);
         close(fd_);
         return;
     }

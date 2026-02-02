@@ -14,6 +14,7 @@ public:
     ~Reactor();
 
     void add_fd(int fd, bool read, bool write, Handler* handler);
+    void remove_fd(int fd);
     void enable_read(int fd);
     void disable_read(int fd);
     void enable_write(int fd);
