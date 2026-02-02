@@ -7,8 +7,8 @@ Connection::Connection(int fd, BufferPool& pool, Reactor& reactor) : fd_(fd), wr
         read_buf_ = pool_.acquire();
     } catch (std::runtime_error e) {
         std::cout << "Failed to acquire read buffer" << std::endl;
-        reactor_.remove_fd(fd_);
-        close(fd_);
+        reactor_.schedule_close(fd_);
+        return;
     }
 
     try {
@@ -16,26 +16,31 @@ Connection::Connection(int fd, BufferPool& pool, Reactor& reactor) : fd_(fd), wr
     } catch (std::runtime_error e) {
         std::cout << "Failed to acquire write buffer" << std::endl;
         pool.release(read_buf_);
-        reactor_.remove_fd(fd_);
-        close(fd_);
+        reactor_.schedule_close(fd_);
+        return;
     }
+
+    std::cout << "Client opened fd=" << fd << std::endl;
 }
 
 Connection::~Connection() {
     pool_.release(read_buf_);
     pool_.release(write_buf_);
-    reactor_.remove_fd(fd_);
-    close(fd_);
+    reactor_.schedule_close(fd_);
 }
 
 void Connection::on_readable() {
     ssize_t n = read(fd_, read_buf_.data + read_buf_.used, read_buf_.size - read_buf_.used);
-    if (n <= 0) {
+    if (n == 0) {
         std::cout << "Client closed fd=" << fd_ << std::endl;
         pool_.release(read_buf_);
         pool_.release(write_buf_);
-        reactor_.remove_fd(fd_);
-        close(fd_);
+        reactor_.schedule_close(fd_);
+        return;
+    } else if (n < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) return;
+        perror("read error");
+        reactor_.schedule_close(fd_);
         return;
     }
     read_buf_.used += n;

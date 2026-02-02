@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <iostream>
 
-Acceptor::Acceptor(int port, std::vector<Reactor*>& reactor, BufferPool& pool, ConnectionManager& conn_mgr) : fd_(-1), reactors_(reactor), next_reactor_(0), pool_(pool), conn_mgr_(conn_mgr) {
+Acceptor::Acceptor(int port, Reactor& reactor, BufferPool& pool) : fd_(-1), reactor_(reactor), pool_(pool) {
     fd_ = socket(AF_INET, SOCK_STREAM, 0);
     int opt = 1;
     setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -37,13 +37,10 @@ void Acceptor::on_readable() {
 
         fcntl(client_fd, F_SETFL, fcntl(client_fd, F_GETFL, 0) | O_NONBLOCK);
 
-        Reactor& reactor = *reactors_[next_reactor_];
-        next_reactor_ = (next_reactor_ + 1) % reactors_.size();
+        auto conn = std::make_unique<Connection>(client_fd, pool_, reactor_);
+        reactor_.add_fd(client_fd, true, true, conn.get());
 
-        auto conn = std::make_unique<Connection>(client_fd, pool_, reactor);
-        reactor.add_fd(client_fd, true, true, conn.get());
-
-        conn_mgr_.add_connection(std::move(conn));
+        conn_mgr_[client_fd] = std::move(conn);
     }
 }
 
